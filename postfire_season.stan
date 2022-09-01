@@ -21,7 +21,7 @@ parameters {
   vector[P] gamma_beta;
   vector[P] lambda_beta;
   vector[P] A_beta;
-  real<lower=0> phi;
+  real phi;
   real<lower=0> tau_sq;
   real<lower=0> gamma_tau_sq;
   real<lower=0> lambda_tau_sq;
