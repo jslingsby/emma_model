@@ -32,8 +32,10 @@ cmdstanr::set_cmdstan_path()#"/home/rstudio/.cmdstanr/cmdstan-2.28.1")
 # tar_destroy(ask = F)
 
 # Testing and training time windows
-training_window=c("2000-01-01","2020-01-01")
-testing_window=c("2020-01-01","2022-01-01")
+#training_window=c("2000-01-01","2020-01-01")
+#testing_window=c("2020-01-01","2022-01-01")
+training_window=c("2000-01-01","2014-07-01")
+testing_window=c("2014-07-01","2022-01-01")
 
 # decide sampling proportion
 total_fynbos_pixels=348911
@@ -65,14 +67,20 @@ list(
                #region=c(xmin = 18.301425, xmax = 18.524242, ymin = -34.565951, ymax = -34.055531), #peninsula
                sample_proportion= sample_proportion, long_pixels=long_pixels)),
   tar_target(envvars,c( #select and possibly rename envvars to be included in model
-    "Mean_Annual_Air_Temperature"="CHELSA_bio10_01_V1.2.tif", #select env vars to use in model
-    "Mean_Annual_Precipitation"="CHELSA_bio10_12_V1.2.tif",
-    "Mean_Monthly_Precipitation_In_Driest_Quarter"="CHELSA_bio10_17_V1.2.tif",
-    "Mean_Annual_Cloud_Frequency"="MODCF_meanannual.tif",
+#    "Mean_January_Precipitation" = "CHELSA_prec_01_V1.2_land.tif",
+    "Mean_July_Precipitation" =  "CHELSA_prec_07_V1.2_land.tif",
+#    "Soil_pH" = "soil_pH.tif",
+    "Max_Air_Temperature_Warmest" = "CHELSA_bio10_05_V1.2.tif",
+    "Min_Air_Temperature_Coldest" =  "CHELSA_bio10_06_V1.2.tif",
+#    "Mean_Annual_Air_Temperature"="CHELSA_bio10_01_V1.2.tif", #select env vars to use in model
+#    "Mean_Annual_Precipitation"="CHELSA_bio10_12_V1.2.tif",
+#    "Mean_Monthly_Precipitation_In_Driest_Quarter"="CHELSA_bio10_17_V1.2.tif",
+#    "Mean_Annual_Cloud_Frequency"="MODCF_meanannual.tif",
     "Cloud_Seasonal_Concentration"="MODCF_seasonality_concentration.tif",
-    "Topographic_Diversity"="alos_topodiversity.tif",
-    "ALOS_CHILI"="alos_chili.tif",
-    "ALOS_MTPI"="alos_mtpi.tif")),
+    "Topographic_Diversity"="alos_topodiversity.tif")),
+#    "ALOS_CHILI"="alos_chili.tif",
+#    "ALOS_MTPI"="alos_mtpi.tif")
+   ),
   tar_target(
     data_training,
     filter_training_data(envdata,envvars)
@@ -105,10 +113,11 @@ list(
     eta=0.11,
     iter = 8000, #should be 1000 or more - 100 is just to run quickly - CP converged after 6400
     garbage_collection=T,
-    init=1,
+    init = 0.5, #list(list(phi = 0.5, tau_sq = 0.1, gamma_tau_sq = 0.1, lambda_tau_sq = 0.1, alpha_tau_sq = 0.1, A_tau_sq = 0.1)),
     tol_rel_obj = 0.001,
     output_samples = 1000,
-    format_df="parquet",
+    #error = "continue", # Used it when getting the error - Chain 1 Exception: normal_rng: Location parameter[975276] is -inf, but must be finite! (in '/tmp/Rtmp8DI5YZ/model-2ad6dc5ec5b.stan', line 91, column 4 to column 33)
+    format_df="parquet"
     #format="parquet"
   ),
 
@@ -116,14 +125,14 @@ list(
               summarize_model_output(model_summary_postfire_season, stan_data, envdata)),
    tar_target(model_prediction,
              summarize_predictions(model_results,stan_data,envdata)),
-  tar_target(spatial_outputs,
+   tar_target(spatial_outputs,
              create_spatial_outputs(model_results,data_training,envdata)),
 
-  tar_target(name = release_outputs,
-             command = release_model_outputs(model_results = model_results,
-                                             spatial_outputs = spatial_outputs,
-                                             model_prediction = model_prediction,
-                                             temp_directory = "data/temp/release/")),
+ # tar_target(name = release_outputs,
+ #            command = release_model_outputs(model_results = model_results,
+ #                                            spatial_outputs = spatial_outputs,
+ #                                            model_prediction = model_prediction,
+ #                                            temp_directory = "data/temp/release/")),
  # tar_target(release,
  #            release_posteriors(
  #              model_output,
