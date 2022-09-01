@@ -30,7 +30,11 @@ td=data %>%
   compute() %>%
   ungroup()
 
-
+### Jasper's inelegant hack to scale the spatial env vars... ###
+hmm1 <- td %>% dplyr::select(!where(is.numeric) | c(x, y, cellID, long))
+hmm2 <- td %>% dplyr::select(where(is.numeric) & !c(x, y, cellID, long)) %>% scale()
+td <- cbind(hmm1, hmm2)
+### End hack ###
 
 if(F) {
   # map domain for debugging
